@@ -30,16 +30,20 @@ while read line; do
           VERSION=`echo "$DEPENDENTS" | grep -Pzo '(?s)<version>.*</version>' | tr '\0' '\n' | sed 's/<version>//g' | sed 's/<\/version>//g'`
           # If "parent" substring is in the path -> all data are in project namespace
           # Overwise extract groupId and version from parent namespace
-          if [[ `echo $pom` == *"parent"* ]];
+
+          DEPENDENT_ARTIFACTID=`xmllint --xpath '/*[local-name()="project"]/*[local-name()="artifactId"]/text()' "$pom" `
+          DEPENDENT_GROUPID=`xmllint --xpath '/*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="groupId"]/text()' "$pom" 2>/dev/null`
+          DEPENDENT_VERSION=`xmllint --xpath '/*[local-name()="project"]/*[local-name()="version"]/text()' "$pom" 2>/dev/null`
+
+          if [[ -z "$DEPENDENT_GROUPID" ]];
           then
             DEPENDENT_GROUPID=`xmllint --xpath '/*[local-name()="project"]/*[local-name()="groupId"]/text()' "$pom"`
-            DEPENDENT_VERSION=`xmllint --xpath '/*[local-name()="project"]/*[local-name()="version"]/text()' "$pom"`
-          else
-            DEPENDENT_GROUPID=`xmllint --xpath '/*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="groupId"]/text()' "$pom"`
-            DEPENDENT_VERSION=`xmllint --xpath '/*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="version"]/text()' "$pom"`
           fi
 
-          DEPENDENT_ARTIFACTID=`xmllint --xpath '/*[local-name()="project"]/*[local-name()="artifactId"]/text()' "$pom"`
+          if [[ -z "$DEPENDENT_VERSION" ]];
+          then
+            DEPENDENT_VERSION=`xmllint --xpath '/*[local-name()="project"]/*[local-name()="parent"]/*[local-name()="version"]/text()' "$pom"`
+          fi
 
           echo "${DEPENDENT_GROUPID}:${DEPENDENT_ARTIFACTID}:${DEPENDENT_VERSION} <- ${GROUP_ID}:${ARTIFACT_ID}:${VERSION}" >> artifacts_${QUARKUS_VERSION_NEW}_ADDED.txt
         fi
