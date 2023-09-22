@@ -6,7 +6,7 @@ QUARKUS_VERSION_OLD="2.13.8.CR3"
 rm -f artifacts_*
 
 wget -O artifacts_${QUARKUS_VERSION_NEW}.txt http://download.eng.bos.redhat.com/rcm-guest/staging/quarkus/quarkus-platform-${QUARKUS_VERSION_NEW}/extras/repository-artifact-list.txt
-wget -O artifacts_${QUARKUS_VERSION_OLD}.txt  http://download.eng.bos.redhat.com/rcm-guest/staging/quarkus/quarkus-platform-${QUARKUS_VERSION_OLD}/extras/repository-artifact-list.txt
+wget -O artifacts_${QUARKUS_VERSION_OLD}.txt http://download.eng.bos.redhat.com/rcm-guest/staging/quarkus/quarkus-platform-${QUARKUS_VERSION_OLD}/extras/repository-artifact-list.txt
 
 while read line; do
   NEW_VERSION=`echo $line | cut -d: -f3`
@@ -23,15 +23,14 @@ while read line; do
     grep -l ">$ARTIFACT_ID<" $LOCAL_REPO -R | grep ".*.pom" > pom_list.txt
 
     while read pom; do
-      DEPENDENTS=`xmllint --xpath '/*[local-name()="project"]/*[local-name()="dependencies"]/*[local-name()="dependency"]' "$pom" | grep -A2 "$GROUP_ID" | grep -A2 "$ARTIFACT_ID"`
+        DEPENDENTS=`xmllint --xpath '/*[local-name()="project"]/*[local-name()="dependencies"]/*[local-name()="dependency"]' "$pom" 2>/dev/null | grep -A2 ">$GROUP_ID<" | grep -A2 ">$ARTIFACT_ID<" `
 
-        if [[ `cat $DEPENDENTS` != "XPath set is empty" ]];
+        if [[ -n "$DEPENDENTS" ]];
         then
-          echo "OK"
-          VERSION=`cat $DEPENDENTS | grep -Pzo '(?s)<version>.*</version>' | sed 's/<version>//g' | sed 's/<\/version>//g'`
+          VERSION=`echo "$DEPENDENTS" | grep -Pzo '(?s)<version>.*</version>' | tr '\0' '\n' | sed 's/<version>//g' | sed 's/<\/version>//g'`
           # If "parent" substring is in the path -> all data are in project namespace
           # Overwise extract groupId and version from parent namespace
-          if [[ `cat $pom` == *"parent"* ]];
+          if [[ `echo $pom` == *"parent"* ]];
           then
             DEPENDENT_GROUPID=`xmllint --xpath '/*[local-name()="project"]/*[local-name()="groupId"]/text()' "$pom"`
             DEPENDENT_VERSION=`xmllint --xpath '/*[local-name()="project"]/*[local-name()="version"]/text()' "$pom"`
@@ -42,11 +41,9 @@ while read line; do
 
           DEPENDENT_ARTIFACTID=`xmllint --xpath '/*[local-name()="project"]/*[local-name()="artifactId"]/text()' "$pom"`
 
-          # com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.13.1.redhat-00002 <- jakarta.activation:jakarta.activation-api:1.2.1.redhat-00002
-          echo -e "${DEPENDENT_GROUPID}:${DEPENDENT_ARTIFACTID}:${DEPENDENT_VERSION} <- ${GROUP_ID}:${ARTIFACT_ID}:${VERSION}\n" >> artifacts_${QUARKUS_VERSION_NEW}_ADDED.txt
-        else
-          echo "No dependents"
+          echo "${DEPENDENT_GROUPID}:${DEPENDENT_ARTIFACTID}:${DEPENDENT_VERSION} <- ${GROUP_ID}:${ARTIFACT_ID}:${VERSION}" >> artifacts_${QUARKUS_VERSION_NEW}_ADDED.txt
         fi
     done < pom_list.txt
+    echo "" >> artifacts_${QUARKUS_VERSION_NEW}_ADDED.txt
   fi
 done < artifacts_${QUARKUS_VERSION_NEW}.txt
