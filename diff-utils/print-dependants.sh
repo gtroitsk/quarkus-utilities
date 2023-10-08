@@ -1,3 +1,5 @@
+#!/bin/sh
+
 LOCAL_REPO="/home/gtroitsk/Downloads/RHBQ/rh-quarkus-platform-3.2.3.ER3-maven-repository/rh-quarkus-platform-3.2.3.GA-maven-repository/maven-repository/"
 
 QUARKUS_VERSION_NEW="3.2.3.ER3"
@@ -23,7 +25,7 @@ while read line; do
     grep -l ">$ARTIFACT_ID<" $LOCAL_REPO -R | grep ".*.pom" > pom_list.txt
 
     while read pom; do
-        DEPENDENTS=`xmllint --xpath '/*[local-name()="project"]/*[local-name()="dependencies"]/*[local-name()="dependency"]' "$pom" 2>/dev/null | grep -A2 ">$GROUP_ID<" | grep -A2 ">$ARTIFACT_ID<" `
+        DEPENDENTS=`xmllint --xpath '/*[local-name()="project"]/*[local-name()="dependencies"]/*[local-name()="dependency"]' "$pom" 2>/dev/null | grep -A2 ">$GROUP_ID<" | grep -A2 ">$ARTIFACT_ID<"`
 
         if [[ -n "$DEPENDENTS" ]];
         then
