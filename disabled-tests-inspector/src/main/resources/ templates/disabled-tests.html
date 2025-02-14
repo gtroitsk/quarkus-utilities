@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Disabled Tests</title>
+</head>
+<body>
+<h1>Disabled Tests for Branch: {branch}</h1>
+<p>Total Disabled Tests: {totalDisabledTests}</p>
+<table border="1">
+    <tr>
+        <th>Test Name</th>
+        <th>Annotation Type</th>
+        <th>Reason</th>
+        <th>Issue Link</th>
+        <th>Can Be Reenabled</th>
+    </tr>
+    {#for test in tests}
+    <tr>
+        <td>{test.testName}</td>
+        <td>{test.annotationType}</td>
+        <td>{test.reason}</td>
+        <td><a href="{test.issueLink}">{test.issueLink}</a></td>
+        <td>{test.canBeReenabled ? 'yes' : 'no'}</td>
+    </tr>
+    {/for}
+</table>
+</body>
+</html>
