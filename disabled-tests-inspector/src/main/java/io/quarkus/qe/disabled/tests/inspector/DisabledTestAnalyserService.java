@@ -66,13 +66,20 @@ public class DisabledTestAnalyserService {
         GHRepository repo = github.getRepository(repoOwner + "/" + repoName);
 
         for (String branch : branches) {
+            LOG.infof("Analyzing repository '%s' on branch '%s'", repoName, branch);
             GHTree tree = repo.getTreeRecursive(branch, 1);
             List<DisabledTest> disabledTests = new ArrayList<>();
             Map<String, DisabledTestsModuleStats> moduleStats = new HashMap<>();
 
+            int fileCount = 0;
             for (GHTreeEntry entry : tree.getTree()) {
                 String filePath = entry.getPath();
                 if (entry.getPath().contains("/test/") && filePath.endsWith(".java")) {
+                    fileCount++;
+                    if (fileCount % 10 == 0) {
+                        LOG.infof("Processed %s test files...", fileCount);
+                    }
+
                     GHContent testClassContent = repo.getFileContent(filePath, branch);
                     TestClassData data = new TestClassData(
                             testClassContent.getHtmlUrl(),
@@ -89,6 +96,8 @@ public class DisabledTestAnalyserService {
 
             String statsListFile = getStatsFileName(baseOutputFileName, branch);
             MAPPER.writerWithDefaultPrettyPrinter().writeValue(new File(statsListFile), moduleStats);
+
+            LOG.infof("Analysis completed for branch '%s'. Found %s disabled tests.", branch, disabledTests.size());
         }
     }
 
@@ -172,7 +181,7 @@ public class DisabledTestAnalyserService {
             if (insideDisabledBlock && (testMethodMatcher.lookingAt() || (classMatcher.lookingAt()))) {
                 for (int i = 0; i < annotationTypes.size(); i++) {
                     disabledTests.add(new DisabledTest(
-                            currentTestMethod != null ? currentTestMethod : "All methods",
+                            currentTestMethod != null ? currentTestMethod : "All tests in class",
                             currentClass,
                             annotationTypes.get(i),
                             reasons.get(i),

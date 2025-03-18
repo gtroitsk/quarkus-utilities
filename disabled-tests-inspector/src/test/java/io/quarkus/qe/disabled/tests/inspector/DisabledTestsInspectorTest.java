@@ -140,7 +140,7 @@ public class DisabledTestsInspectorTest {
         List<DisabledTest> results = analyzeTestClass(testClassContent);
 
         assertEquals(1, results.size());
-        assertDisabledTestDetails(results.get(0), "ClassDisabledTest", "All methods",
+        assertDisabledTestDetails(results.get(0), "ClassDisabledTest", "All tests in class",
                 "Disabled", "Disabled class", null);
     }
 
@@ -241,7 +241,7 @@ public class DisabledTestsInspectorTest {
 
         assertEquals(4, results.size());
 
-        assertDisabledTestDetails(results.get(0), "MultiTestClass", "All methods",
+        assertDisabledTestDetails(results.get(0), "MultiTestClass", "All tests in class",
                 "DisabledOnNative", null, null);
 
         assertDisabledTestDetails(results.get(1), "MultiTestClass", "testOne",
@@ -292,12 +292,12 @@ public class DisabledTestsInspectorTest {
 
         assertEquals(2, results.size());
 
-        assertDisabledTestDetails(results.get(0), "TestClass", "All methods",
+        assertDisabledTestDetails(results.get(0), "TestClass", "All tests in class",
                 "DisabledIfSystemProperty",
                 "https://github.com/org/repo/issues/1145",
                 "https://github.com/org/repo/issues/1145");
 
-        assertDisabledTestDetails(results.get(1), "TestClass", "All methods",
+        assertDisabledTestDetails(results.get(1), "TestClass", "All tests in class",
                 "EnabledIfSystemProperty",
                 null, null);
     }
